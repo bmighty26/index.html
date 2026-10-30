@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build the Water System</title>
+<style>
+:root {
+  --navy: #12304a;
+  --blue: #1677c8;
+  --sky: #eaf7ff;
+  --aqua: #39c6d7;
+  --green: #16845b;
+  --gold: #f3b63f;
+  --ink: #193247;
+  --muted: #61798b;
+  --card: #ffffff;
+  --line: #d7e7ef;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #eaf7ff 0%, #f8fcff 60%, #edf9f5 100%);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+button { font: inherit; }
+.app { max-width: 1120px; margin: 0 auto; padding: 28px 18px 40px; }
+header { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-bottom: 22px; }
+.brand { display: flex; gap: 12px; align-items: center; }
+.logo { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--blue); color: white; font-size: 28px; box-shadow: 0 8px 18px #1677c833; }
+.eyebrow { text-transform: uppercase; letter-spacing: .13em; color: var(--blue); font-size: 11px; font-weight: 800; }
+h1 { margin: 3px 0 0; font-size: clamp(24px, 4vw, 36px); letter-spacing: -.04em; color: var(--navy); }
+.header-tag { background: #d9f6eb; color: #126447; border-radius: 999px; padding: 9px 13px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.intro { color: var(--muted); line-height: 1.6; margin: 0 0 22px; max-width: 720px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.stat, .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 8px 28px #16405c0a; }
+.stat { padding: 15px 17px; }
+.stat-label { color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.stat-value { color: var(--navy); font-size: 25px; font-weight: 850; letter-spacing: -.04em; }
+.stat-value small { font-size: 13px; color: var(--muted); font-weight: 700; letter-spacing: 0; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(270px, .8fr); gap: 18px; align-items: start; }
+.panel { padding: 20px; }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 15px; }
+h2 { margin: 0; font-size: 18px; color: var(--navy); }
+.small-note { color: var(--muted); font-size: 12px; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; max-width: 520px; margin: 0 auto; }
+.tile {
+  position: relative; aspect-ratio: 1; min-width: 0; border: 2px solid #d8eaf4; border-radius: 14px;
+  background: #f4fbff; display: grid; place-items: center; cursor: pointer; color: var(--blue);
+  transition: transform .15s ease, background .15s ease, border-color .15s ease; overflow: hidden;
+}
+.tile:hover { transform: translateY(-2px); border-color: #79c9e8; background: #e8f7ff; }
+.tile:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.tile.source, .tile.home { background: #e1f7ed; border-color: #9bdfc1; }
+.tile.reached { background: #dff8f5; border-color: var(--aqua); }
+.tile .pipe { width: 76%; height: 76%; overflow: visible; }
+.tile .tag { position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font-size: clamp(8px, 1.2vw, 10px); font-weight: 800; color: #4b7186; }
+.tile.source .tag, .tile.home .tag { color: #126447; }
+.tile .flow-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 0 3px #39c6d72b; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 17px; }
+.btn { border: 0; border-radius: 12px; padding: 11px 16px; cursor: pointer; font-weight: 800; transition: transform .15s ease, opacity .15s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--blue); color: white; box-shadow: 0 6px 15px #1677c82b; }
+.btn-secondary { background: #eaf3f8; color: var(--navy); }
+.side-stack { display: grid; gap: 18px; }
+.progress-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 15px 0 8px; }
+.progress-track { height: 12px; background: #e6f0f5; border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--aqua)); border-radius: inherit; transition: width .25s ease; }
+.milestones { display: grid; gap: 10px; margin-top: 16px; }
+.milestone { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 13px; padding: 10px; }
+.milestone-icon { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: #edf4f8; color: #8299a8; font-weight: 900; }
+.milestone.done { background: #f0fbf6; border-color: #b9e8d2; }
+.milestone.done .milestone-icon { background: #d3f5e5; color: #13754f; }
+.milestone-title { font-size: 12px; font-weight: 850; }
+.milestone-desc { color: var(--muted); font-size: 11px; margin-top: 3px; }
+.status { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #8299a8; }
+.milestone.done .status { color: #13754f; }
+.message { border-radius: 13px; background: #edf8ff; border: 1px solid #cdeafb; padding: 13px; color: #235b7d; font-size: 13px; line-height: 1.5; min-height: 54px; }
+.legend { display: flex; gap: 13px; flex-wrap: wrap; color: var(--muted); font-size: 11px; margin-top: 14px; justify-content: center; }
+.legend span { display: inline-flex; gap: 5px; align-items: center; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; background: var(--aqua); }
+.legend .legend-start { background: #69c99c; }
+.legend .legend-plain { background: #d8eaf4; }
+footer { margin-top: 22px; color: #6d8797; font-size: 11px; text-align: center; }
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  header { align-items: flex-start; }
+  .header-tag { display: none; }
+}
+@media (max-width: 400px) {
+  .app { padding: 18px 10px 28px; }
+  .panel { padding: 13px; }
+  .grid { gap: 5px; }
+  .tile { border-radius: 10px; }
+  .stat { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true">💧</div>
+      <div><div class="eyebrow">Clean water challenge</div><h1>Build the Water System</h1></div>
+    </div>
+    <div class="header-tag">PLAY • CONNECT • MAKE AN IMPACT</div>
+  </header>
+  <p class="intro">Every turn brings clean water closer to the community. Rotate the pipes to build a connected route from the water source to the home. Watch your score, progress, and milestones as you play!</p>
+
+  <section class="stats" aria-label="Game statistics">
+    <div class="stat"><div class="stat-label">YOUR SCORE</div><div class="stat-value" id="score">100 <small>pts</small></div></div>
+    <div class="stat"><div class="stat-label">MOVES MADE</div><div class="stat-value" id="moves">0</div></div>
+    <div class="stat"><div class="stat-label">PIPES CONNECTED</div><div class="stat-value" id="connected">1 <small>/ 7</small></div></div>
+    <div class="stat"><div class="stat-label">PROGRESS</div><div class="stat-value" id="percent">14<small>%</small></div></div>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-head"><h2>Water pipe puzzle</h2><span class="small-note">Tap a pipe to rotate ↻</span></div>
+      <div class="grid" id="grid" aria-label="4 by 4 water pipe puzzle"></div>
+      <div class="legend">
+        <span><i class="legend-start"></i> Water source / home</span>
+        <span><i></i> Connected pipe</span>
+        <span><i class="legend-plain"></i> Pipe to rotate</span>
+      </div>
+      <div class="controls">
+        <button class="btn btn-primary" id="hintBtn">Show a hint</button>
+        <button class="btn btn-secondary" id="resetBtn">Restart puzzle</button>
+      </div>
+    </section>
+
+    <aside class="side-stack">
+      <section class="panel">
+        <div class="panel-head"><h2>Milestone tracker</h2><span class="small-note" id="milestoneCount">0 of 4</span></div>
+        <div class="progress-top"><strong>Community water progress</strong><strong id="progressLabel">14%</strong></div>
+        <div class="progress-track" role="progressbar" aria-label="Puzzle progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="14" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="milestones" id="milestones"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Game update</h2><span aria-hidden="true">📣</span></div>
+        <div class="message" id="message" role="status" aria-live="polite">Welcome! Rotate the pipes to start building your clean-water route.</div>
+      </section>
+    </aside>
+  </div>
+  <footer>Learning through play • Every connection counts • Built with HTML, CSS, and JavaScript</footer>
+</div>
+
+<script>
+const ROWS = 4, COLS = 4;
+const START_SCORE = 100, ROTATION_COST = 5;
+const milestoneDefs = [
+  { at: 2, title: "First connection", desc: "Connect the source to your first pipe.", icon: "1" },
+  { at: 4, title: "Halfway there", desc: "Connect at least 4 of the 7 route tiles.", icon: "2" },
+  { at: 6, title: "Almost home", desc: "Bring water within one pipe of the home.", icon: "3" },
+  { at: 7, title: "Clean water delivered!", desc: "Complete the route to the community home.", icon: "★" }
+];
+// Direction order: N, E, S, W
+const DIRS = [{dr:-1,dc:0,bit:1,op:4},{dr:0,dc:1,bit:2,op:8},{dr:1,dc:0,bit:4,op:1},{dr:0,dc:-1,bit:8,op:2}];
+const masks = {
+  straight: [10,5],       // E-W, N-S
+  elbow: [3,6,12,9],      // N-E, E-S, S-W, W-N
+  tee: [11,7,14,13],
+  cross: [15]
+};
+const route = ["0,0","0,1","0,2","0,3","1,3","2,3","3,3"];
+const routeTypes = {
+  "0,0": {type:"source", mask:2, solved:2},
+  "0,1": {type:"straight", mask:5, solved:10},
+  "0,2": {type:"straight", mask:5, solved:10},
+  "0,3": {type:"elbow", mask:12, solved:12},
+  "1,3": {type:"straight", mask:10, solved:5},
+  "2,3": {type:"straight", mask:5, solved:5},
+  "3,3": {type:"home", mask:1, solved:1}
+};
+let board = [], moves = 0, score = START_SCORE, unlocked = new Set(), won = false, bestProgress = 1;
+
+function rotateMask(mask) {
+  return ((mask << 1) & 15) | ((mask & 8) >> 3);
+}
+function rotateTo(mask, count) { for (let i=0;i<count;i++) mask=rotateMask(mask); return mask; }
+function makeBoard() {
+  board = [];
+  for (let r=0;r<ROWS;r++) {
+    const row = [];
+    for (let c=0;c<COLS;c++) {
+      const key = `${r},${c}`;
+      if (routeTypes[key]) {
+        const item = routeTypes[key];
+        // Begin with a scrambled but solvable orientation.
+        const rotations = {"0,0":0,"0,1":1,"0,2":2,"0,3":1,"1,3":1,"2,3":2,"3,3":0}[key];
+        row.push({type:item.type, mask:rotateTo(item.solved, rotations), route:true, solved:item.solved});
+      } else {
+        const type = Math.random() < .65 ? "elbow" : "straight";
+        const options = masks[type];
+        row.push({type, mask:options[Math.floor(Math.random()*options.length)], route:false, solved:options[0]});
+      }
+    }
+    board.push(row);
+  }
+  // Make the source and home fixed, with their intended openings.
+  board[0][0].mask = 2;
+  board[3][3].mask = 1;
+  moves = 0; score = START_SCORE; unlocked = new Set(); won = false; bestProgress = 1;
+  render();
+  updateState(true);
+}
+function isOpen(mask, bit) { return (mask & bit) !== 0; }
+function getReachable() {
+  const seen = new Set(["0,0"]), queue = [[0,0]];
+  while (queue.length) {
+    const [r,c] = queue.shift(), current = board[r][c];
+    for (const d of DIRS) {
+      if (!isOpen(current.mask, d.bit)) continue;
+      const nr=r+d.dr, nc=c+d.dc;
+      if (nr<0 || nr>=ROWS || nc<0 || nc>=COLS) continue;
+      const next=board[nr][nc], key=`${nr},${nc}`;
+      if (!isOpen(next.mask,d.op) || seen.has(key)) continue;
+      seen.add(key); queue.push([nr,nc]);
+    }
+  }
+  return seen;
+}
+function routeConnected(reachable) {
+  let count=0;
+  for (const key of route) { if (reachable.has(key)) count++; else break; }
+  return count;
+}
+function pipeSvg(mask, type) {
+  const stroke = type === "source" || type === "home" ? "#16845b" : "#1677c8";
+  const paths = [];
+  // Draw each open arm from center toward edge, then a central hub.
+  for (const d of DIRS) {
+    if (isOpen(mask,d.bit)) {
+      const coords = d.bit===1 ? [50,50,50,12] : d.bit===2 ? [50,50,88,50] : d.bit===4 ? [50,50,50,88] : [50,50,12,50];
+      paths.push(`<line x1="${coords[0]}" y1="${coords[1]}" x2="${coords[2]}" y2="${coords[3]}" stroke="${stroke}" stroke-width="15" stroke-linecap="round"/>`);
+    }
+  }
+  paths.push(`<circle cx="50" cy="50" r="11" fill="${stroke}"/>`);
+  if (type==="source") paths.push(`<path d="M50 7 C43 18 38 23 38 31 A12 12 0 0 0 62 31 C62 23 57 18 50 7Z" fill="#39c6d7" stroke="#fff" stroke-width="2"/>`);
+  if (type==="home") paths.push(`<path d="M27 43 L50 24 L73 43 V72 H33 V43" fill="#fff" stroke="#16845b" stroke-width="5" stroke-linejoin="round"/><rect x="45" y="52" width="10" height="20" rx="2" fill="#bcebd6"/>`);
+  return `<svg class="pipe" viewBox="0 0 100 100" aria-hidden="true">${paths.join("")}</svg>`;
+}
+function render() {
+  const reachable=getReachable();
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  board.forEach((row,r)=>row.forEach((cell,c)=>{
+    const key=`${r},${c}`, reached=reachable.has(key);
+    const btn=document.createElement("button");
+    btn.className="tile"+(cell.type==="source"?" source":"")+(cell.type==="home"?" home":"")+(reached?" reached":"");
+    btn.type="button";
+    btn.setAttribute("aria-label", `${cell.type==="source"?"Water source":cell.type==="home"?"Community home":cell.type+" pipe"} at row ${r+1}, column ${c+1}. Rotate pipe.`);
+    btn.title=cell.type==="source"?"Water source":cell.type==="home"?"Community home":"Tap to rotate pipe";
+    btn.innerHTML=pipeSvg(cell.mask,cell.type)+(reached?'<span class="flow-dot"></span>':"")+
+      `<span class="tag">${cell.type==="source"?"SOURCE":cell.type==="home"?"HOME":reached?"CONNECTED":"ROTATE"}</span>`;
+    btn.addEventListener("click",()=>rotateCell(r,c));
+    grid.appendChild(btn);
+  }));
+}
+function rotateCell(r,c) {
+  if (won || r===0&&c===0 || r===3&&c===3) {
+    if (r===0&&c===0 || r===3&&c===3) setMessage("The source and home are fixed. Rotate the pipes between them.");
+    return;
+  }
+  board[r][c].mask=rotateMask(board[r][c].mask);
+  moves++; score=Math.max(0,score-ROTATION_COST);
+  render(); updateState(false);
+}
+function updateState(initial) {
+  const reachable=getReachable();
+  const count=routeConnected(reachable);
+  const pct=Math.round(count/route.length*100);
+  bestProgress=Math.max(bestProgress,count);
+  document.getElementById("score").innerHTML=`${score} <small>pts</small>`;
+  document.getElementById("moves").textContent=moves;
+  document.getElementById("connected").innerHTML=`${count} <small>/ ${route.length}</small>`;
+  document.getElementById("percent").innerHTML=`${pct}<small>%</small>`;
+  document.getElementById("progressLabel").textContent=`${pct}%`;
+  document.getElementById("progressFill").style.width=`${pct}%`;
+  const bar=document.getElementById("progressBar");
+  bar.setAttribute("aria-valuenow",pct);
+  milestoneDefs.forEach((m,i)=>{ if(bestProgress>=m.at) unlocked.add(i); });
+  document.getElementById("milestoneCount").textContent=`${unlocked.size} of ${milestoneDefs.length}`;
+  document.getElementById("milestones").innerHTML=milestoneDefs.map((m,i)=>{
+    const done=unlocked.has(i);
+    return `<div class="milestone ${done?"done":""}"><div class="milestone-icon">${done?"✓":m.icon}</div><div><div class="milestone-title">${m.title}</div><div class="milestone-desc">${m.desc}</div></div><div class="status">${done?"Done":"Locked"}</div></div>`;
+  }).join("");
+  if (reachable.has("3,3") && count===route.length) {
+    won=true;
+    setMessage(`🎉 Water connected! You delivered clean water in ${moves} moves and finished with ${score} points. Restart to play again.`);
+  } else if (initial) {
+    setMessage("Welcome! Rotate the pipes to start building your clean-water route.");
+  } else if (count>=6) {
+    setMessage("So close! Water has reached the last stretch. Find the final connection to the home.");
+  } else if (count>=4) {
+    setMessage("Great progress! You have connected halfway along the planned route. Keep rotating pipes.");
+  } else if (count>=2) {
+    setMessage("Nice! Your first connection is made. Follow the pipe path toward the home.");
+  } else {
+    setMessage("Keep going! Rotate pipes until the open ends line up and water can flow forward.");
+  }
+}
+function setMessage(text) { document.getElementById("message").textContent=text; }
+document.getElementById("resetBtn").addEventListener("click",makeBoard);
+document.getElementById("hintBtn").addEventListener("click",()=>{
+  if(won) { setMessage("You already completed the route! Restart to play again."); return; }
+  const reachable=getReachable();
+  const firstMissing=route.find((key,i)=>i>0&&!reachable.has(key));
+  if(!firstMissing) { setMessage("The water route is connected. Check the home tile to finish!"); return; }
+  const [r,c]=firstMissing.split(",").map(Number);
+  setMessage(`Hint: look at the pipe in row ${r+1}, column ${c+1}. Rotate it so one opening points back toward the connected water, then line up its other opening with the next pipe.`);
+});
+makeBoard();
+</script>
+</body>
+</html>
